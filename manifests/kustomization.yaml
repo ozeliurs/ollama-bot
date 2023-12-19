@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - llama-bot-deployment.yaml
   - ollama-secret-sealed.yaml
+  - namespace.yaml
