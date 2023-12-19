@@ -84,7 +84,7 @@ async def on_message(message):
 
 async def answer_message_job(user_message):
     prompt = user_message.content.replace(f"<@{client.user.id}> ", "")
-    prompt = f"<@{user_message.author.id}> {prompt}"
+    prompt = f"<@{user_message.author.id}>: {prompt}"
 
     if user_message.channel.id in contexts:
         context = contexts[user_message.channel.id]
@@ -124,7 +124,7 @@ def update_message(message, response, timeout=True):
     print(f"\nUpdating message: {response}")
 
     res = requests.patch(f"https://discord.com/api/channels/{message.channel.id}/messages/{message.id}",
-                         json={"content": response},
+                         json={"content": (response.split(":", 1)[1] if ":" in response else response)},
                          headers={"Authorization": f"Bot {TOKEN}"}
                          )
 
