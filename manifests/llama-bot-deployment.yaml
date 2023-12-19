@@ -37,7 +37,7 @@ spec:
                 secretKeyRef:
                   key: OLLAMA_URL
                   name: ollama-secret
-          image: ghcr.io/ozeliurs/ollama-bot:566496598497a302c01947f20bb17517c7a3006d
+          image: ghcr.io/ozeliurs/ollama-bot:fefae8d65a83f3b5178c95485dec6f3d9dead6c3
           name: llama-bot
           resources: {}
       restartPolicy: Always
