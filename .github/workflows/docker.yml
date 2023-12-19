@@ -50,3 +50,11 @@ jobs:
         # In manifests/kustomization.yaml
         run: |
           sed -i "s/\(.*name: ghcr.io\/ozeliurs\/ollama-bot\).*$/\1\n    newTag: ${{ github.sha }}/g" manifests/kustomization.yaml
+          cat manifests/kustomization.yaml
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github@action.com"
+          git add manifests/kustomization.yaml
+          git commit -m "Update image tag to ${{ github.sha }}"
+          git push
