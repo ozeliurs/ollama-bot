@@ -4,3 +4,6 @@ resources:
   - llama-bot-deployment.yaml
   - ollama-secret-sealed.yaml
   - namespace.yaml
+images:
+  - name: ghcr.io/ozeliurs/ollama-bot
+    newTag: a55cafbf3410d4ef3b3c7cee523105db7812d9f8
