@@ -12,7 +12,6 @@ from utils import ensure_fixed_nous_hermes
 ensure_fixed_nous_hermes()
 
 TOKEN = os.environ.get("DISCORD_TOKEN", None)
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api")
 
 if TOKEN is None:
     raise Exception("No token provided")
