@@ -2,8 +2,7 @@ version: "3"
 
 services:
   llama-bot:
-    image: TODO
-    container_name: llama-bot
+    image: ghcr.io/ozeliurs/ollama-bot:latest
     restart: unless-stopped
     env_file:
       - .env

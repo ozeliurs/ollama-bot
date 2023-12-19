@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: llama-bot
+  name: llama-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: llama-bot
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/ollama-bot-default: "true"
+        io.kompose.service: llama-bot
+    spec:
+      containers:
+        - env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: DISCORD_TOKEN
+                  name: ollama-secret
+            - name: OLLAMA_URL
+              valueFrom:
+                secretKeyRef:
+                  key: OLLAMA_URL
+                  name: ollama-secret
+          image: ghcr.io/ozeliurs/ollama-bot:latest
+          name: llama-bot
+          resources: {}
+      restartPolicy: Always
+status: {}
