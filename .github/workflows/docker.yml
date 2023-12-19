@@ -40,17 +40,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
       - name: Image digest
-        # sed to replace:
-        # images:
-        #   - name: ghcr.io/ozeliurs/ollama-bot
-        #     newTag: fefae8d65a83f3b5178c95485dec6f3d9dead6c3
-        # with:
-        # images:
-        #   - name: ghcr.io/ozeliurs/ollama-bot
-        #     newTag: ${{ github.sha }}
-        # In manifests/kustomization.yaml
         run: |
-          sed -i "s/\(.*name: ghcr.io\/ozeliurs\/ollama-bot\).*$/\1\n    newTag: ${{ github.sha }}/g" manifests/kustomization.yaml
+          sed -i "s/newTag: .*/newTag: ${{ github.sha }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
       - name: Commit and push changes
         run: |
