@@ -74,6 +74,9 @@ async def on_message(message):
             await message.reply("System updated!")
             return
 
+        if message.content.lower().startswith("/ollama prompt"):
+            await message.reply("Prompt: \n" + system)
+
     if f"<@{client.user.id}>" in message.content.lower():
         # Start background task to answer the message
         asyncio.ensure_future(answer_message_job(message))
