@@ -58,7 +58,7 @@ def load_system(system_url):
 
 @client.event
 async def on_message(message):
-    global contexts
+    global contexts, system
     if message.author == client.user:
         return
 
