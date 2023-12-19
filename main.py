@@ -40,10 +40,39 @@ async def on_ready():
     print("Ready!")
 
 
+def load_system(system_url):
+    res = requests.get(system_url)
+
+    if res.status_code != 200:
+        raise Exception(f"Failed to load system: {res.status_code} {res.text}")
+
+    json_data = res.json()
+
+    if "char_persona" not in json_data or "example_dialogue" not in json_data or "char_name" not in json_data:
+        raise Exception("Invalid system")
+
+    return f"""You are {json_data["char_name"]}.
+{json_data["char_persona"]}
+{json_data["example_dialogue"]}"""
+
+
 @client.event
 async def on_message(message):
+    global contexts
     if message.author == client.user:
         return
+
+    if message.content.lower().startswith("/ollama"):
+        if message.content.lower().startswith("/ollama reset"):
+            contexts[message.channel.id] = None
+            await message.reply("Context reset!")
+            return
+
+        if message.content.lower().startswith("/ollama system"):
+            system_url = message.content.replace("/ollama system ", "")
+            system = load_system(system_url)
+            await message.reply("System updated!")
+            return
 
     if f"<@{client.user.id}>" in message.content.lower():
         # Start background task to answer the message
