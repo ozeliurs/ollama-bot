@@ -97,7 +97,7 @@ async def answer_message_job(user_message):
     Thread(
         target=generate,
         args=(
-            "fixed_nous-hermes2",
+            "fixed_nous-hermes2:10.7b-solar-q5_K_M",
             prompt,
             lambda x: update_message(bot_message, x),
             lambda x: update_message(bot_message, x, False),
