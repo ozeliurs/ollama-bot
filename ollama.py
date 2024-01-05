@@ -5,7 +5,7 @@ from typing import Callable
 
 import requests
 
-BASE_URL = os.environ.get("OLLAMA_URL", "http://10.42.5.164:11434/api")
+BASE_URL = os.environ.get("OLLAMA_URL", "http://10.42.5.165:11434/api")
 
 
 def handle_errors(res: str):
