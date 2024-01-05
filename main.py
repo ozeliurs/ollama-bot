@@ -9,7 +9,7 @@ import requests
 from ollama import generate
 from utils import ensure_fixed_nous_hermes
 
-ensure_fixed_nous_hermes()
+# ensure_fixed_nous_hermes()
 
 TOKEN = os.environ.get("DISCORD_TOKEN", None)
 
@@ -97,7 +97,7 @@ async def answer_message_job(user_message):
     Thread(
         target=generate,
         args=(
-            "fixed_nous-hermes2:10.7b-solar-q5_K_M",
+            "nous-hermes2:10.7b-solar-q5_K_M",
             prompt,
             lambda x: update_message(bot_message, x),
             lambda x: update_message(bot_message, x, False),
