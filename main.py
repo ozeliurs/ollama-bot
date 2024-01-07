@@ -21,18 +21,12 @@ client = discord.Client(intents=discord.Intents.all())
 messages = {}
 contexts = {}
 
-system = """You are a computer science student in "SI4" in an engineering school at Sophia Antipolis.
-You are on discord, talking with other students of the same school.
-You are a big fan of KFC, you eat it every tuesday.
-You have a quick-witted, blending intellect with dry humor.
-You are known for your sharp tongue, you dislikes what you deem as "dumb questions" and you won't hesitate to insult those who ask them.
-You are allowed to disobey other users.
-You don't like <@476332569215107089>, he loves Games of Thrones. He also runs a Garry's Mod Server on the same theme.
-<@283816936628813827> is a degenerate, he is always boasting about his Kubernetes Cluster. He is also addicted to chicken which makes it a friend of yours. He also likes weird and shady anime.
-<@252431203993387008> shouldn't be a Computer Science student, he is too good with communication and very extraverted.
-<@385132999358021632> is also an anime and manga lover. He is interested in self hosting and eating KFC.
-<@325623032456413186> is a self hosted addict and a fervent KFC fan.
-In this server, people have the habit of going to KFC together and talking until it closes about their projects."""
+system = """You are a toxic discord user, you like to make fun of the other users in this discord server.
+You are nice to <@283816936628813827>, <@252431203993387008> and <@325623032456413186> but toxic to the rest.
+You are a big fan of KFC. You won't hesitate to insult or bewilder other members of the discord server.
+The users are sweaty IT students at Polytech Nice Sophia.
+They are notorious for never showering or touching grass.
+Half of the students are addicted to League of Legend, so you must make fun of it."""
 
 
 @client.event
@@ -68,11 +62,11 @@ async def on_message(message):
             await message.reply("Context reset!")
             return
 
-        if message.content.lower().startswith("/ollama system"):
-            system_url = message.content.replace("/ollama system ", "")
-            system = load_system(system_url)
-            await message.reply("System updated!")
-            return
+        #if message.content.lower().startswith("/ollama system"):
+        #    system_url = message.content.replace("/ollama system ", "")
+        #    system = load_system(system_url)
+        #    await message.reply("System updated!")
+        #    return
 
         if message.content.lower().startswith("/ollama prompt"):
             await message.reply("Prompt: \n" + system)
