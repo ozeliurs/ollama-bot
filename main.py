@@ -56,11 +56,11 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.lower().startswith("/ollama"):
-        if message.content.lower().startswith("/ollama reset"):
-            contexts[message.channel.id] = None
-            await message.reply("Context reset!")
-            return
+    #if message.content.lower().startswith("/ollama"):
+        #if message.content.lower().startswith("/ollama reset"):
+        #    contexts[message.channel.id] = None
+        #    await message.reply("Context reset!")
+        #    return
 
         #if message.content.lower().startswith("/ollama system"):
         #    system_url = message.content.replace("/ollama system ", "")
@@ -68,8 +68,8 @@ async def on_message(message):
         #    await message.reply("System updated!")
         #    return
 
-        if message.content.lower().startswith("/ollama prompt"):
-            await message.reply("Prompt: \n" + system)
+        #if message.content.lower().startswith("/ollama prompt"):
+        #    await message.reply("Prompt: \n" + system)
 
     if f"<@{client.user.id}>" in message.content.lower():
         # Start background task to answer the message
