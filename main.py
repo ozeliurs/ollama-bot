@@ -98,7 +98,8 @@ async def answer_message_job(user_message):
             lambda x: update_context(user_message.channel.id, x),
         ),
         kwargs={"system": system,
-                "context": context}
+                "context": context,
+                "num_gpu": 20}
     ).start()
 
 
