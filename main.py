@@ -99,7 +99,7 @@ async def answer_message_job(user_message):
         ),
         kwargs={"system": system,
                 "context": context,
-                "num_gpu": 20}
+                "options": {"num_gpu": 20}}
     ).start()
 
 
