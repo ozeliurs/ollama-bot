@@ -91,15 +91,14 @@ async def answer_message_job(user_message):
     Thread(
         target=generate,
         args=(
-            "nous-hermes2:10.7b-solar-q5_K_M",
+            "mistral:latest",
             prompt,
             lambda x: update_message(bot_message, x),
             lambda x: update_message(bot_message, x, False),
             lambda x: update_context(user_message.channel.id, x),
         ),
         kwargs={"system": system,
-                "context": context,
-                "options": {"num_gpu": 20}}
+                "context": context}
     ).start()
 
 
