@@ -49,7 +49,7 @@ jobs:
 
       - name: Image digest
         run: |
-          sed -i "s/newTag: .*/newTag: ${{ steps.meta.outputs.digest }}/g" manifests/kustomization.yaml
+          sed -i "s/newTag: .*/newTag: ${{ github.sha::8 }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
 
       - name: Commit and push changes
