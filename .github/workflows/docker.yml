@@ -31,7 +31,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/wapiti
+          images: ghcr.io/${{ github.repository_owner }}/ollama-bot
           tags: |
             latest
             type=ref,event=branch
@@ -49,7 +49,7 @@ jobs:
 
       - name: Image digest
         run: |
-          sed -i "s/newTag: .*/newTag: ${github.sha::8}/g" manifests/kustomization.yaml
+          sed -i "s/newTag: .*/newTag: ${{ steps.meta.outputs.short-sha }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
 
       - name: Commit and push changes
