@@ -47,9 +47,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Get short SHA
+        id: short-sha
+        run: echo ::set-output name=short-sha::${GITHUB_SHA::8}
+
       - name: Image digest
         run: |
-          sed -i "s/newTag: .*/newTag: ${{ steps.meta.outputs.short-sha }}/g" manifests/kustomization.yaml
+          sed -i "s/newTag: .*/newTag: ${{ steps.short-sha.outputs.short-sha }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
 
       - name: Commit and push changes
