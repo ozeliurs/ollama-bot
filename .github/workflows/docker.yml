@@ -53,7 +53,7 @@ jobs:
 
       - name: Image digest
         run: |
-          sed -i "s/newTag: .*/newTag: ${{ steps.short-sha.outputs.short-sha }}/g" manifests/kustomization.yaml
+          sed -i "s/newTag: .*/newTag: sha-${{ steps.short-sha.outputs.short-sha }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
 
       - name: Commit and push changes
