@@ -6,4 +6,4 @@ resources:
   - namespace.yaml
 images:
   - name: ghcr.io/ozeliurs/ollama-bot
-    newTag: 54b13a262ef04332f051c9de21a49fd2339af1a4
+    newTag: 
