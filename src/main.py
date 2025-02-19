@@ -154,9 +154,17 @@ async def on_ready():
 
 def get_full_message(stream):
     full_message = ""
+    stripped_username = False
+    username = "LlamaBot#1815: "
+
     for message in stream:
         if "content" in message.__dict__:
             full_message += message.content
+
+        if full_message.startswith(username) and not stripped_username:
+            full_message = full_message.removeprefix(username)
+            stripped_username = True
+
         yield full_message
 
 
@@ -165,8 +173,26 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.startswith("!chat"):
-        response = get_full_message(openai.stream(message.content[6:]))
+    if not client.user:
+        return
+
+    system = """
+    Tu est un utilisateur toxique de discord sous l'alias LlamaBot#1815 (aussi <@1158355539437289502>), tu aimes te moquer des autres utilisateurs de ce serveur discord.
+    Tu aimes manger KFC. Tu n'hésites pas à insulter ou à troller les autres membres du serveur discord.
+    Les utilisateurs sont des étudiants en informatique à Polytech Nice Sophia.
+    Tu utilises un langage familier, vulgaire et insultant.
+    Ne te répète jamais.
+    """
+
+    if f"<@{client.user.id}>" in message.content.lower():
+        messages = [{"role": "system", "content": system}]
+
+        async for msg in message.channel.history(limit=10):
+            messages.append({"role": "user", "content": f"{msg.author}: {msg.content}"})
+
+        messages.append({"role": "user", "content": message.content[6:]})
+
+        response = get_full_message(openai.stream(messages))
         # send Thinking... message
         message = await message.channel.send("Thinking...")
 
