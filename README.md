@@ -47,6 +47,7 @@ Ollama Bot is a dynamic Discord bot powered by OpenAI's language models, designe
     DISCORD_TOKEN=your_discord_bot_token
     OPENAI_API_KEY=your_openai_api_key
     OPENAI_MODEL=your_openai_model
+    OPENAI_BASE_URL=your_openai_base_url
     ```
 
 ### Run the Bot

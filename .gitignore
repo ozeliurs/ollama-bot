@@ -1,1 +1,4 @@
 .idea/
+.ropeproject/
+
+secret.yaml
