@@ -1,139 +1,184 @@
 import asyncio
+import functools
+import logging.handlers
 import os
-import time
-from threading import Thread
+import threading
+from typing import Dict, Optional, Type
 
 import discord
-import requests
+from dotenv import load_dotenv
+from langchain_core.messages import AIMessageChunk
+from langchain_core.outputs import ChatGenerationChunk
+from langchain_openai import ChatOpenAI
+from langchain_openai.chat_models.base import _convert_delta_to_message_chunk
+from langsmith.schemas import UsageMetadata
+from pydantic import SecretStr
 
-from ollama import generate
-from utils import ensure_fixed_nous_hermes
+logger = logging.getLogger("discord")
+logger.setLevel(logging.DEBUG)
+logging.getLogger("discord.http").setLevel(logging.INFO)
+# log to stdout
+handler = logging.StreamHandler()
+dt_fmt = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(
+    "[{asctime}] [{levelname:<8}] {name}: {message}", dt_fmt, style="{"
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
-# ensure_fixed_nous_hermes()
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 
-TOKEN = os.environ.get("DISCORD_TOKEN", None)
+intents = discord.Intents.default()
+intents.message_content = True
 
-if TOKEN is None:
-    raise Exception("No token provided")
+client = discord.Client(intents=intents)
 
-client = discord.Client(intents=discord.Intents.all())
 
-messages = {}
-contexts = {}
+class CustomChatOpenAI(ChatOpenAI):
+    def _convert_chunk_to_generation_chunk(
+        self,
+        chunk: dict,
+        default_chunk_class: Type,
+        base_generation_info: Optional[Dict],
+    ) -> Optional[ChatGenerationChunk]:
+        if chunk.get("type") == "content.delta":  # from beta.chat.completions.stream
+            return None
+        choices = (
+            chunk.get("choices", [])
+            # from beta.chat.completions.stream
+            or chunk.get("chunk", {}).get("choices", [])
+        )
 
-system = """You are a toxic discord user, you like to make fun of the other users in this discord server.
-You are nice to <@283816936628813827>, <@252431203993387008> and <@325623032456413186> but toxic to the rest.
-You are a big fan of KFC. You won't hesitate to insult or bewilder other members of the discord server.
-The users are sweaty IT students at Polytech Nice Sophia.
-They are notorious for never showering or touching grass.
-Half of the students are addicted to League of Legend, so you must make fun of it."""
+        usage_metadata: Optional[UsageMetadata] = None
+        if len(choices) == 0:
+            # logprobs is implicitly None
+            generation_chunk = ChatGenerationChunk(
+                message=default_chunk_class(content="", usage_metadata=usage_metadata)
+            )
+            return generation_chunk
+
+        choice = choices[0]
+        if choice["delta"] is None:
+            return None
+
+        message_chunk = _convert_delta_to_message_chunk(
+            choice["delta"], default_chunk_class
+        )
+        generation_info = {**base_generation_info} if base_generation_info else {}
+
+        if finish_reason := choice.get("finish_reason"):
+            generation_info["finish_reason"] = finish_reason
+            if model_name := chunk.get("model"):
+                generation_info["model_name"] = model_name
+            if system_fingerprint := chunk.get("system_fingerprint"):
+                generation_info["system_fingerprint"] = system_fingerprint
+
+        logprobs = choice.get("logprobs")
+        if logprobs:
+            generation_info["logprobs"] = logprobs
+
+        if usage_metadata and isinstance(message_chunk, AIMessageChunk):
+            message_chunk.usage_metadata = usage_metadata
+
+        generation_chunk = ChatGenerationChunk(
+            message=message_chunk, generation_info=generation_info or None
+        )
+        return generation_chunk
+
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_model = os.getenv("OPENAI_MODEL")
+
+if not openai_api_key:
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+if not openai_model:
+    raise ValueError("OPENAI_MODEL environment variable is not set")
+
+openai = CustomChatOpenAI(
+    api_key=SecretStr(openai_api_key),
+    base_url=os.getenv("OPENAI_BASE_URL"),
+    model=openai_model,
+)
+
+
+def debounce(wait_time):
+    """
+    Decorator that will debounce a function so that it is called after wait_time seconds.
+    If it is called multiple times, it will wait for the last call to be debounced and run only this one.
+    Supports both synchronous and asynchronous functions.
+    """
+
+    def decorator(function):
+        if asyncio.iscoroutinefunction(function):
+            # Async version
+            @functools.wraps(function)
+            async def async_debounced(*args, **kwargs):
+                if async_debounced._task is not None:
+                    async_debounced._task.cancel()
+
+                async def call_function():
+                    await asyncio.sleep(wait_time)
+                    async_debounced._task = None
+                    return await function(*args, **kwargs)
+
+                async_debounced._task = asyncio.create_task(call_function())
+
+            async_debounced._task = None
+            return async_debounced
+        else:
+            # Sync version
+            @functools.wraps(function)
+            def sync_debounced(*args, **kwargs):
+                def call_function():
+                    sync_debounced._timer = None
+                    return function(*args, **kwargs)
+
+                if sync_debounced._timer is not None:
+                    sync_debounced._timer.cancel()
+
+                sync_debounced._timer = threading.Timer(wait_time, call_function)
+                sync_debounced._timer.start()
+
+            sync_debounced._timer = None
+            return sync_debounced
+
+    return decorator
 
 
 @client.event
 async def on_ready():
-    print("Ready!")
+    print(f"We have logged in as {client.user}")
 
 
-def load_system(system_url):
-    res = requests.get(system_url)
-
-    if res.status_code != 200:
-        raise Exception(f"Failed to load system: {res.status_code} {res.text}")
-
-    json_data = res.json()
-
-    if "char_persona" not in json_data or "example_dialogue" not in json_data or "char_name" not in json_data:
-        raise Exception("Invalid system")
-
-    return f"""You are {json_data["char_name"]}.
-{json_data["char_persona"]}
-{json_data["example_dialogue"]}"""
+def get_full_message(stream):
+    full_message = ""
+    for message in stream:
+        if "content" in message.__dict__:
+            full_message += message.content
+        yield full_message
 
 
 @client.event
 async def on_message(message):
-    global contexts, system
     if message.author == client.user:
         return
 
-    #if message.content.lower().startswith("/ollama"):
-        #if message.content.lower().startswith("/ollama reset"):
-        #    contexts[message.channel.id] = None
-        #    await message.reply("Context reset!")
-        #    return
+    if message.content.startswith("!chat"):
+        response = get_full_message(openai.stream(message.content[6:]))
+        # send Thinking... message
+        message = await message.channel.send("Thinking...")
 
-        #if message.content.lower().startswith("/ollama system"):
-        #    system_url = message.content.replace("/ollama system ", "")
-        #    system = load_system(system_url)
-        #    await message.reply("System updated!")
-        #    return
+        @debounce(0.3)
+        async def message_edit(content):
+            return await message.edit(content=content)
 
-        #if message.content.lower().startswith("/ollama prompt"):
-        #    await message.reply("Prompt: \n" + system)
-
-    if f"<@{client.user.id}>" in message.content.lower():
-        # Start background task to answer the message
-        asyncio.ensure_future(answer_message_job(message))
+        for full_message in response:
+            await message_edit(full_message)
 
 
-async def answer_message_job(user_message):
-    prompt = user_message.content.replace(f"<@{client.user.id}> ", "")
-    prompt = f"<@{user_message.author.id}>: {prompt}"
+if TOKEN is None:
+    raise ValueError("DISCORD_TOKEN environment variable is not set")
 
-    if user_message.channel.id in contexts:
-        context = contexts[user_message.channel.id]
-    else:
-        context = None
-
-    bot_message = await user_message.reply("Thinking...")
-
-    # New thread
-    Thread(
-        target=generate,
-        args=(
-            "mistral:latest",
-            prompt,
-            lambda x: update_message(bot_message, x),
-            lambda x: update_message(bot_message, x, False),
-            lambda x: update_context(user_message.channel.id, x),
-        ),
-        kwargs={"system": system,
-                "context": context}
-    ).start()
-
-
-def update_message(message, response, timeout=True):
-    global messages
-
-    if message.id not in messages:
-        messages[message.id] = time.time() - 1
-
-    # If less than 2 seconds have passed since the last update, don't update
-    if time.time() - messages[message.id] < 1 and timeout:
-        print("=", end="")
-        return
-
-    messages[message.id] = time.time()
-
-    print(f"\nUpdating message: {response}")
-
-    res = requests.patch(f"https://discord.com/api/channels/{message.channel.id}/messages/{message.id}",
-                         json={"content": (response.split(":", 1)[1] if ":" in response else response)},
-                         headers={"Authorization": f"Bot {TOKEN}"}
-                         )
-
-    if res.status_code != 200:
-        print(f"Failed to update message: {res.status_code} {res.text}")
-        if not timeout:
-            print("Retrying...")
-            time.sleep(.2)
-            update_message(message, response, False)
-
-
-def update_context(channel_id, context):
-    global contexts
-
-    contexts[channel_id] = context["context"]
-
-
-client.run(TOKEN)
+client.run(TOKEN, log_handler=None)
