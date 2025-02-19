@@ -170,7 +170,7 @@ async def on_message(message):
         # send Thinking... message
         message = await message.channel.send("Thinking...")
 
-        @debounce(0.3)
+        @debounce(0.2)
         async def message_edit(content):
             return await message.edit(content=content)
 
