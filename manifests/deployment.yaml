@@ -4,8 +4,14 @@ metadata:
   namespace: llama-bot
   name: llama-bot
 spec:
+  selector:
+    matchLabels:
+      app: llama-bot
   replicas: 1
   template:
+    metadata:
+      labels:
+        app: llama-bot
     spec:
       containers:
         - env:
@@ -27,7 +33,7 @@ spec:
             - name: OPENAI_BASE_URL
               value: "https://api.groq.com/openai/v1"
 
-          image: ghcr.io/ozeliurs/ollama-bot:sha-6871e53
+          image: ghcr.io/ozeliurs/ollama-bot:latest
           name: llama-bot
           resources: {}
       restartPolicy: Always
