@@ -51,6 +51,7 @@ jobs:
         run: |
           sed -i "s/newTag: .*/newTag: ${{ steps.meta.outputs.digest }}/g" manifests/kustomization.yaml
           cat manifests/kustomization.yaml
+
       - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"
