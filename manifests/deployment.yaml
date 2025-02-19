@@ -27,7 +27,7 @@ spec:
             - name: OPENAI_BASE_URL
               value: "https://api.groq.com/openai/v1"
 
-          image: ghcr.io/ozeliurs/ollama-bot
+          image: ghcr.io/ozeliurs/ollama-bot:sha-6871e53
           name: llama-bot
           resources: {}
       restartPolicy: Always
